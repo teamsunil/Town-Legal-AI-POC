@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Town Legal AI Planning Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;1,300&family=Mulish:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#6797AD;          /* sampled from Town Legal logo */
+  --harbour:#3E6477;        /* deeper brand tone for large surfaces */
+  --harbour-2:#34586A;
+  --ink:#1D2A31;
+  --muted:#586A73;
+  --paper:#FFFFFF;
+  --mist:#F0F4F6;
+  --rule:#D3DEE4;
+  --link:#3A6679;
+  --ai-bg:#F4F7F9;
+  --user-bg:#3E6477;
+  --user-ink:#FFFFFF;
+  --ok:#2F6B4F;
+  --warn-bg:#F3F6F8;
+  --shadow:0 18px 40px -24px rgba(29,42,49,.45);
+  --serif:"Spectral", Georgia, "Times New Roman", serif;
+  --sans:"Mulish", "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --harbour:#2C4A59; --harbour-2:#243E4B;
+    --ink:#E4ECF0; --muted:#9DB0B9; --paper:#10181D; --mist:#172229; --rule:#2A3A42;
+    --link:#9CC4D6; --ai-bg:#18242B; --user-bg:#4A7589; --warn-bg:#172229; --ok:#7CC2A0;
+    --shadow:0 18px 40px -24px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --harbour:#2C4A59; --harbour-2:#243E4B;
+  --ink:#E4ECF0; --muted:#9DB0B9; --paper:#10181D; --mist:#172229; --rule:#2A3A42;
+  --link:#9CC4D6; --ai-bg:#18242B; --user-bg:#4A7589; --warn-bg:#172229; --ok:#7CC2A0;
+  --shadow:0 18px 40px -24px rgba(0,0,0,.8);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6}
+img{max-width:100%;display:block}
+a{color:var(--link)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+.wrap{width:min(1180px,100% - 48px);margin-inline:auto}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:2px;border:1px solid transparent;font-weight:600;font-size:15px;text-decoration:none;letter-spacing:.01em;transition:background .2s,color .2s,border-color .2s}
+.btn-light{background:#fff;color:#2F4F5E}
+.btn-light:hover{background:#E8F0F4}
+.btn-outline{border-color:var(--rule);color:var(--ink);background:transparent}
+.btn-outline:hover{border-color:var(--brand)}
+.btn-solid{background:var(--harbour);color:#fff}
+.btn-solid:hover{background:var(--harbour-2)}
+.btn-ghost-light{border-color:rgba(255,255,255,.45);color:#fff;background:transparent}
+.btn-ghost-light:hover{border-color:#fff}
+.btn-sm{padding:8px 14px;font-size:14px}
+
+/* ---------- Landing header ---------- */
+.site-head{border-bottom:1px solid var(--rule);background:var(--paper)}
+.site-head .wrap{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:84px}
+.logo-tile{display:block;background:#6797AD;line-height:0}
+.logo-tile img{height:56px;width:auto}
+.head-nav{display:flex;align-items:center;gap:26px}
+.head-nav a.plain{color:var(--ink);text-decoration:none;font-size:15px;font-weight:500}
+.head-nav a.plain:hover{color:var(--link)}
+
+/* ---------- Hero ---------- */
+.hero{background:var(--harbour);color:#fff;position:relative;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:64px;padding-block:88px 96px;align-items:center}
+.hero-copy{position:relative;padding-left:34px}
+.hero-copy::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:2px;background:#fff}
+.hero h1{font-family:var(--serif);font-weight:300;font-size:clamp(2.3rem,4.6vw,3.9rem);line-height:1.08;letter-spacing:.005em;margin:0 0 26px;max-width:16ch}
+.hero .sub{font-size:1.14rem;line-height:1.65;max-width:52ch;margin:0 0 34px;color:#EAF2F6}
+.hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:28px}
+.hero .disclaimer{font-size:.86rem;color:#D5E4EB;max-width:52ch;margin:0}
+
+.preview{background:var(--paper);color:var(--ink);border-radius:3px;box-shadow:0 30px 60px -30px rgba(0,0,0,.55);overflow:hidden}
+.preview-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--rule);font-size:13px;font-weight:600}
+.preview-body{padding:20px 18px 22px;display:flex;flex-direction:column;gap:14px}
+.preview .msg{opacity:0;transform:translateY(8px);animation:rise .6s ease forwards}
+.preview .msg:nth-child(1){animation-delay:.3s}
+.preview .msg:nth-child(2){animation-delay:1.1s}
+.preview .msg:nth-child(3){animation-delay:1.9s}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ---------- Sections ---------- */
+.section{padding-block:88px}
+.section-mist{background:var(--mist)}
+.section h2{font-family:var(--serif);font-weight:400;font-size:clamp(1.8rem,3vw,2.4rem);line-height:1.2;margin:0 0 12px}
+.section .lede{color:var(--muted);max-width:60ch;margin:0 0 44px;font-size:1.05rem}
+
+.areas{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule)}
+.area{background:var(--paper);padding:26px 24px 24px;text-align:left;border:0;color:var(--ink);position:relative;display:flex;flex-direction:column;gap:8px;min-height:170px}
+.area::before{content:"";position:absolute;left:0;top:26px;height:28px;width:2px;background:var(--brand);transition:height .25s}
+.area:hover::before,.area:focus-visible::before{height:calc(100% - 52px)}
+.area h3{font-family:var(--serif);font-weight:500;font-size:1.2rem;margin:0;line-height:1.3}
+.area p{margin:0;color:var(--muted);font-size:.93rem;line-height:1.55}
+.area .go{margin-top:auto;font-size:.86rem;font-weight:600;color:var(--link)}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;counter-reset:s}
+.step{border-top:1px solid var(--rule);padding-top:22px}
+.step .n{font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--brand);line-height:1}
+.step h3{font-size:1.05rem;margin:12px 0 6px}
+.step p{margin:0;color:var(--muted);font-size:.95rem}
+
+.notice{display:grid;grid-template-columns:auto 1fr;gap:18px;padding:24px 26px;border-left:2px solid var(--brand);background:var(--warn-bg);max-width:860px}
+.notice p{margin:0;font-size:.97rem}
+.src{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted);font-weight:600}
+.src .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none}
+
+.site-foot{border-top:1px solid var(--rule);padding-block:34px;font-size:.86rem;color:var(--muted)}
+.site-foot .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center}
+
+/* ---------- App (chat) view ---------- */
+.app{position:fixed;inset:0;z-index:50;background:var(--paper);display:none;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.app.open{display:flex;animation:appIn .35s ease}
+@keyframes appIn{from{opacity:0}to{opacity:1}}
+.app-bar{display:flex;align-items:center;gap:16px;padding:10px 20px;border-bottom:1px solid var(--rule);flex:none}
+.app-bar .logo-tile img{height:40px}
+.app-title{display:flex;flex-direction:column;min-width:0}
+.app-title strong{font-family:var(--serif);font-weight:500;font-size:1.15rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.icon-btn{border:1px solid var(--rule);background:transparent;color:var(--ink);border-radius:2px;padding:8px 12px;font-size:14px;font-weight:600;display:inline-flex;gap:8px;align-items:center;text-decoration:none}
+.icon-btn:hover{border-color:var(--brand)}
+.only-mobile{display:none}
+
+.app-body{flex:1;min-height:0;display:grid;grid-template-columns:1fr 360px}
+.chat{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--rule)}
+.thread{flex:1;overflow-y:auto;padding:34px 0 20px;scroll-behavior:smooth}
+.thread-inner{width:min(760px,100% - 40px);margin-inline:auto;display:flex;flex-direction:column;gap:22px}
+
+.msg{display:flex;gap:12px;align-items:flex-start;animation:msgIn .35s ease both}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.avatar{flex:none;width:34px;height:34px;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700;letter-spacing:.14em;padding-left:2px;position:relative}
+.avatar::before{content:"";position:absolute;left:6px;top:7px;bottom:7px;width:1px;background:rgba(255,255,255,.85)}
+.bubble{max-width:min(600px,100%);padding:14px 18px;font-size:.98rem;line-height:1.6;white-space:pre-wrap;word-wrap:break-word}
+.msg.ai .bubble{background:var(--ai-bg);border-left:2px solid var(--brand);border-radius:0 3px 3px 0;color:var(--ink)}
+.msg.user{justify-content:flex-end}
+.msg.user .bubble{max-width:min(560px,85%);background:var(--user-bg);color:var(--user-ink);border-radius:3px 3px 0 3px}
+.msg-meta{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:.78rem;color:var(--muted)}
+.msg-meta a{color:var(--link);font-weight:600;text-decoration:none}
+.msg-meta a:hover{text-decoration:underline}
+.msg-col{display:flex;flex-direction:column;min-width:0}
+
+.typing .bubble{display:flex;gap:5px;align-items:center;padding:16px 18px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--brand);animation:blink 1.2s infinite ease-in-out}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding-left:46px;animation:msgIn .35s ease both}
+.chip{border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:8px 14px;border-radius:40px;font-size:.88rem;font-weight:500;text-align:left;transition:border-color .2s,background .2s}
+.chip:hover{border-color:var(--brand);background:var(--mist)}
+.chip.primary{background:var(--harbour);border-color:var(--harbour);color:#fff}
+.chip.primary:hover{background:var(--harbour-2)}
+
+.card{margin-left:46px;border:1px solid var(--rule);background:var(--paper);box-shadow:var(--shadow);animation:msgIn .45s ease both}
+.card-head{padding:18px 22px 14px;border-bottom:1px solid var(--rule)}
+.card-kicker{font-size:.86rem;color:var(--muted);margin:0 0 4px}
+.card h3{font-family:var(--serif);font-weight:500;font-size:1.35rem;margin:0;line-height:1.25}
+.card-body{padding:16px 22px 20px}
+.card-body ul{margin:0 0 14px;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+.card-body li{font-size:.86rem;padding:5px 11px;background:var(--mist);border-left:2px solid var(--brand)}
+.card-body p{margin:0 0 12px;font-size:.95rem;color:var(--ink)}
+.card-body .fine{font-size:.82rem;color:var(--muted);margin:0}
+.card-foot{display:flex;flex-wrap:wrap;gap:10px;padding:0 22px 20px}
+.lead-card{border-left:2px solid var(--harbour)}
+
+.composer{flex:none;border-top:1px solid var(--rule);padding:14px 0 12px;background:var(--paper)}
+.composer-inner{width:min(760px,100% - 40px);margin-inline:auto}
+.input-row{display:flex;gap:10px;align-items:flex-end;border:1px solid var(--rule);padding:8px 8px 8px 16px;background:var(--paper);transition:border-color .2s}
+.input-row:focus-within{border-color:var(--brand)}
+.input-row textarea{flex:1;border:0;resize:none;background:transparent;color:var(--ink);font:inherit;font-size:1rem;line-height:1.5;max-height:140px;padding:6px 0;outline:none}
+.send{background:var(--harbour);color:#fff;border:0;padding:10px 18px;font-weight:600;border-radius:2px}
+.send:disabled{opacity:.45;cursor:not-allowed}
+.composer-note{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:.76rem;color:var(--muted)}
+
+/* Overview panel */
+.overview{overflow-y:auto;padding:28px 26px 30px;background:var(--mist);display:flex;flex-direction:column;gap:24px}
+.overview h2{font-family:var(--serif);font-weight:500;font-size:1.3rem;margin:0}
+.ov-list{margin:0;display:flex;flex-direction:column}
+.ov-row{padding:12px 0;border-bottom:1px solid var(--rule)}
+.ov-row dt{font-size:.8rem;color:var(--muted);font-weight:600;margin-bottom:3px}
+.ov-row dd{margin:0;font-size:.95rem;font-weight:500;min-height:1.5em}
+.ov-row dd.empty{color:var(--muted);font-weight:400;font-style:italic}
+.ov-row dd.flash{animation:flash 1.2s ease}
+@keyframes flash{0%{background:rgba(103,151,173,.28)}100%{background:transparent}}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{font-size:.8rem;padding:3px 9px;background:var(--paper);border:1px solid var(--rule)}
+.status{display:inline-flex;align-items:center;gap:8px}
+.status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.status[data-s="gathering"]::before{background:var(--brand)}
+.status[data-s="ready"]::before{background:#C79A3B}
+.status[data-s="submitted"]::before{background:var(--ok)}
+.progress{height:3px;background:var(--rule);margin-top:6px}
+.progress span{display:block;height:100%;background:var(--brand);width:0;transition:width .5s ease}
+.ov-cta{display:flex;flex-direction:column;gap:10px}
+.ov-cta .btn{justify-content:center}
+.safety{font-size:.84rem;line-height:1.55;padding:14px 16px;border-left:2px solid var(--brand);background:var(--paper);margin:0}
+.sheet-close{display:none}
+
+/* Modal */
+dialog{border:0;padding:0;max-width:640px;width:calc(100% - 32px);background:var(--paper);color:var(--ink);box-shadow:0 40px 80px -30px rgba(0,0,0,.6)}
+dialog::backdrop{background:rgba(20,34,41,.55)}
+.modal-head{padding:24px 28px 16px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.modal-head h2{font-family:var(--serif);font-weight:500;font-size:1.45rem;margin:0 0 4px;line-height:1.25}
+.modal-head p{margin:0;color:var(--muted);font-size:.92rem}
+.x{border:0;background:transparent;color:var(--ink);font-size:1.5rem;line-height:1;padding:4px 8px}
+.form{padding:22px 28px 26px;display:grid;grid-template-columns:1fr 1fr;gap:16px 18px;max-height:min(70vh,640px);overflow-y:auto}
+.field{display:flex;flex-direction:column;gap:6px}
+.field.full{grid-column:1 / -1}
+.field label{font-size:.85rem;font-weight:600}
+.field label .req{color:var(--link)}
+.field input,.field select,.field textarea{font:inherit;font-size:.95rem;color:var(--ink);background:var(--paper);border:1px solid var(--rule);padding:10px 12px;border-radius:2px;width:100%}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brand);outline:none}
+.field textarea{min-height:110px;resize:vertical}
+.field .err{font-size:.8rem;color:#B3413A;min-height:0}
+.field.invalid input,.field.invalid textarea{border-color:#B3413A}
+.radio-row{display:flex;flex-wrap:wrap;gap:16px;font-size:.92rem}
+.radio-row label{font-weight:500;display:flex;gap:6px;align-items:center}
+.form-actions{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding-top:6px}
+.form-actions small{color:var(--muted);font-size:.78rem;max-width:40ch}
+.success{padding:40px 30px 36px;text-align:left}
+.success .mark{width:44px;height:44px;border:2px solid var(--ok);border-radius:50%;display:grid;place-items:center;color:var(--ok);font-size:1.3rem;margin-bottom:18px}
+.success h2{font-family:var(--serif);font-weight:500;font-size:1.5rem;margin:0 0 10px}
+.success p{margin:0 0 22px;color:var(--ink);max-width:52ch}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px){
+  .hero .wrap{grid-template-columns:1fr;gap:48px;padding-block:64px 72px}
+  .preview{max-width:560px}
+  .app-body{grid-template-columns:1fr 320px}
+}
+@media (max-width: 860px){
+  .head-nav a.plain{display:none}
+  .steps{grid-template-columns:1fr;gap:26px}
+  .app-body{grid-template-columns:1fr}
+  .chat{border-right:0}
+  .only-mobile{display:inline-flex}
+  .hide-mobile{display:none}
+  .overview{position:fixed;left:0;right:0;bottom:0;max-height:82%;z-index:60;background:var(--mist);border-top:1px solid var(--rule);box-shadow:0 -20px 50px -20px rgba(0,0,0,.45);transform:translateY(105%);transition:transform .3s ease;padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+  .overview.show{transform:none}
+  .sheet-close{display:inline-flex;align-self:flex-end;margin-bottom:-10px}
+  .scrim{position:fixed;inset:0;background:rgba(20,34,41,.45);z-index:55;display:none}
+  .scrim.show{display:block}
+}
+@media (max-width: 600px){
+  .wrap{width:calc(100% - 32px)}
+  .site-head .wrap{min-height:70px}
+  .logo-tile img{height:46px}
+  .head-nav .btn-outline{display:none}
+  .head-nav{gap:10px}
+  .head-nav .btn{padding:9px 13px;font-size:14px}
+  .hero-copy{padding-left:22px}
+  .section{padding-block:64px}
+  .app-bar{padding:8px 12px;gap:10px}
+  .app-bar .logo-tile img{height:34px}
+  .app-title strong{font-size:1rem}
+  .app-title .src{font-size:.72rem}
+  .thread-inner,.composer-inner{width:calc(100% - 24px)}
+  .chips,.card{margin-left:0;padding-left:0}
+  .avatar{width:28px;height:28px;font-size:8px}
+  .bubble{padding:12px 14px;font-size:.95rem}
+  .form{grid-template-columns:1fr;padding:18px 20px 22px}
+  .modal-head{padding:20px 20px 14px}
+  .icon-btn .lbl{display:none}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-delay:0s !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
+  .preview .msg{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= LANDING ================= -->
+<header class="site-head">
+  <div class="wrap">
+    <a class="logo-tile" href="https://www.townlegal.com/" target="_blank" rel="noopener" aria-label="Town Legal LLP website">
+      <img src="data:image/png;base64,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" alt="Town Legal LLP">
+    </a>
+    <nav class="head-nav" aria-label="Primary">
+      <a class="plain" href="https://www.townlegal.com/our-practice/" target="_blank" rel="noopener">Our practice</a>
+      <a class="plain" href="https://www.townlegal.com/who-we-are/" target="_blank" rel="noopener">Who we are</a>
+      <a class="btn btn-outline btn-sm" href="https://www.townlegal.com/" target="_blank" rel="noopener">Visit Town Legal Website</a>
+      <a class="btn btn-solid btn-sm" href="https://www.townlegal.com/contact/" target="_blank" rel="noopener">Speak to Town Legal</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-copy">
+        <h1>Planning questions? Start with Town Legal AI.</h1>
+        <p class="sub">Tell us about your planning matter in your own words. Our AI assistant can help identify the relevant area of Town Legal’s expertise and guide you towards the next step.</p>
+        <div class="hero-actions">
+          <button class="btn btn-light" data-open-chat>Start a Conversation</button>
+          <a class="btn btn-ghost-light" href="https://www.townlegal.com/our-practice/" target="_blank" rel="noopener">View our practice areas</a>
+        </div>
+        <p class="disclaimer">AI-generated information is for general guidance only and does not constitute legal advice.</p>
+      </div>
+
+      <div class="preview" aria-label="Example conversation">
+        <div class="preview-head">
+          <span>Town Legal AI Planning Assistant</span>
+          <span class="src"><span class="dot"></span>Knowledge source: Town Legal website</span>
+        </div>
+        <div class="preview-body">
+          <div class="msg user"><div class="bubble">We are a developer planning a 150-home residential scheme and are negotiating a Section 106 agreement.</div></div>
+          <div class="msg ai"><div class="avatar" aria-hidden="true">TL</div><div class="bubble">Thanks. Your enquiry may relate to Section 106 and planning obligations. To understand the matter further, are you currently negotiating the agreement with the local planning authority, and are there any specific obligations or viability issues you are looking to resolve?</div></div>
+          <div class="msg user"><div class="bubble">Yes, with the council. Viability on affordable housing is the sticking point.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="areas">
+    <div class="wrap">
+      <h2>Areas the assistant can help you identify</h2>
+      <p class="lede">Town Legal’s sole focus is planning law. Choose an area to begin, or start a conversation and describe your matter in your own words.</p>
+      <div class="areas" id="areaGrid"></div>
+    </div>
+  </section>
+
+  <section class="section section-mist">
+    <div class="wrap">
+      <h2>How it works</h2>
+      <p class="lede">A short, guided conversation in place of a blank contact form.</p>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><h3>Describe your matter</h3><p>Explain the site, the scheme or the problem in plain language. No legal terminology needed.</p></div>
+        <div class="step"><div class="n">2</div><h3>Answer a few questions</h3><p>The assistant asks about development type, location and planning stage to understand the context.</p></div>
+        <div class="step"><div class="n">3</div><h3>Send it for review</h3><p>See which areas of Town Legal’s practice may be relevant, then submit your enquiry to the team.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="notice">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" style="color:var(--brand);margin-top:2px"><circle cx="12" cy="12" r="10"/><path d="M12 7v6M12 16.5v.5"/></svg>
+        <div>
+          <p><strong>Important:</strong> This AI assistant provides general information only and does not constitute legal advice. Specific legal matters should be reviewed by a qualified Town Legal professional.</p>
+          <p style="margin-top:10px"><span class="src"><span class="dot"></span>Knowledge source: Town Legal website</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>Town Legal LLP. Proof of concept for demonstration purposes.</span>
+    <span><a href="https://www.townlegal.com/" target="_blank" rel="noopener">townlegal.com</a></span>
+  </div>
+</footer>
+
+<!-- ================= CHAT APP ================= -->
+<div class="app" id="app" role="dialog" aria-modal="true" aria-label="Town Legal AI Planning Assistant">
+  <div class="app-bar">
+    <span class="logo-tile"><img src="data:image/png;base64,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" alt="Town Legal LLP"></span>
+    <div class="app-title">
+      <strong>Town Legal AI Planning Assistant</strong>
+      <span class="src"><span class="dot"></span>Knowledge source: Town Legal website</span>
+    </div>
+    <div class="app-actions">
+      <button class="icon-btn only-mobile" id="ovToggle" aria-controls="overview" aria-expanded="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span class="lbl">Overview</span>
+      </button>
+      <button class="icon-btn" id="resetBtn" title="Start a new enquiry">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg><span class="lbl">New enquiry</span>
+      </button>
+      <a class="icon-btn hide-mobile" href="https://www.townlegal.com/" target="_blank" rel="noopener">Visit Town Legal Website</a>
+      <button class="icon-btn" id="closeBtn" aria-label="Close assistant">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <section class="chat" aria-label="Conversation">
+      <div class="thread" id="thread" aria-live="polite"><div class="thread-inner" id="threadInner"></div></div>
+      <div class="composer">
+        <div class="composer-inner">
+          <div class="input-row">
+            <label for="input" class="sr" style="position:absolute;left:-9999px">Describe your planning matter</label>
+            <textarea id="input" rows="1" placeholder="Describe your planning matter…"></textarea>
+            <button class="send" id="sendBtn" disabled>Send</button>
+          </div>
+          <div class="composer-note">
+            <span>AI-generated information is for general guidance only and does not constitute legal advice.</span>
+            <span class="hide-mobile">Enter to send, Shift + Enter for a new line</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="overview" id="overview" aria-label="Enquiry overview">
+      <button class="icon-btn sheet-close" id="sheetClose">Close</button>
+      <div>
+        <h2>Enquiry Overview</h2>
+        <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+      </div>
+      <dl class="ov-list">
+        <div class="ov-row"><dt>Matter type</dt><dd id="ov-matter" class="empty">Awaiting details</dd></div>
+        <div class="ov-row"><dt>Potential practice area</dt><dd id="ov-practice" class="empty">Awaiting details</dd></div>
+        <div class="ov-row"><dt>Related topics</dt><dd id="ov-topics" class="empty">Awaiting details</dd></div>
+        <div class="ov-row"><dt>Project type</dt><dd id="ov-devType" class="empty">Awaiting details</dd></div>
+        <div class="ov-row"><dt>Project location</dt><dd id="ov-location" class="empty">Awaiting details</dd></div>
+        <div class="ov-row"><dt>Planning stage</dt><dd id="ov-stage" class="empty">Awaiting details</dd></div>
+        <div class="ov-row"><dt>Key issue</dt><dd id="ov-issue" class="empty">Awaiting details</dd></div>
+        <div class="ov-row"><dt>Enquiry status</dt><dd><span class="status" id="ov-status" data-s="new">Not started</span></dd></div>
+      </dl>
+      <div class="ov-cta">
+        <a class="btn btn-solid" href="https://www.townlegal.com/contact/" target="_blank" rel="noopener">Speak to Town Legal</a>
+        <a class="btn btn-outline" href="https://www.townlegal.com/" target="_blank" rel="noopener">Visit Town Legal Website</a>
+      </div>
+      <p class="safety"><strong>Important:</strong> This AI assistant provides general information only and does not constitute legal advice. Specific legal matters should be reviewed by a qualified Town Legal professional.</p>
+      <span class="src"><span class="dot"></span>Knowledge source: Town Legal website</span>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+  </div>
+</div>
+
+<!-- ================= ENQUIRY MODAL ================= -->
+<dialog id="leadModal" aria-labelledby="leadTitle">
+  <div id="leadFormView">
+    <div class="modal-head">
+      <div>
+        <h2 id="leadTitle">Submit your enquiry</h2>
+        <p>We have pre-filled what you told the assistant. Please check and complete the details.</p>
+      </div>
+      <button class="x" data-close-modal aria-label="Close">&times;</button>
+    </div>
+    <form class="form" id="leadForm" novalidate>
+      <div class="field"><label for="f-name">Full Name <span class="req">*</span></label><input id="f-name" name="fullname" autocomplete="name"><span class="err"></span></div>
+      <div class="field"><label for="f-org">Company / Organisation</label><input id="f-org" name="org" autocomplete="organization"><span class="err"></span></div>
+      <div class="field"><label for="f-email">Email <span class="req">*</span></label><input id="f-email" name="email" type="email" autocomplete="email"><span class="err"></span></div>
+      <div class="field"><label for="f-tel">Telephone</label><input id="f-tel" name="tel" type="tel" autocomplete="tel"><span class="err"></span></div>
+      <div class="field"><label for="f-loc">Location</label><input id="f-loc" name="location"><span class="err"></span></div>
+      <div class="field"><label for="f-type">Project Type</label>
+        <select id="f-type" name="type">
+          <option value="">Select</option>
+          <option>Residential</option><option>Mixed-use</option><option>Commercial</option>
+          <option>Industrial / logistics</option><option>Energy / infrastructure</option>
+          <option>Regeneration</option><option>Student accommodation</option><option>Other</option>
+        </select><span class="err"></span></div>
+      <div class="field full"><label for="f-desc">Brief Description <span class="req">*</span></label><textarea id="f-desc" name="desc"></textarea><span class="err"></span></div>
+      <div class="field full"><span style="font-size:.85rem;font-weight:600">Preferred Contact Method</span>
+        <div class="radio-row">
+          <label><input type="radio" name="contact" value="Email" checked> Email</label>
+          <label><input type="radio" name="contact" value="Telephone"> Telephone</label>
+          <label><input type="radio" name="contact" value="Either"> Either</label>
+        </div>
+      </div>
+      <div class="form-actions">
+        <small>Submitting does not create a solicitor–client relationship. The team will review your enquiry and decide on the appropriate next step.</small>
+        <button type="submit" class="btn btn-solid">Submit My Enquiry</button>
+      </div>
+    </form>
+  </div>
+  <div id="leadSuccessView" class="success" hidden>
+    <div class="mark" aria-hidden="true">✓</div>
+    <h2>Enquiry submitted</h2>
+    <p>Thank you. Your enquiry has been captured. The Town Legal team can review the information provided and determine the appropriate next step.</p>
+    <button class="btn btn-solid" data-close-modal>Back to conversation</button>
+  </div>
+</dialog>
+
+<script>
+/* =========================================================================
+   Town Legal AI Planning Assistant — Proof of concept
+   -------------------------------------------------------------------------
+   All "AI" behaviour is simulated in generateAIResponse(). It is async and
+   returns a structured response, so it can be swapped for a call to a
+   secure server-side endpoint (which holds the OpenAI key and is grounded
+   on Town Legal's approved content). No API key is ever used in the browser.
+   ========================================================================= */
+
+const SITE = 'https://www.townlegal.com';
+
+/* ---- Knowledge base: practice areas as listed on townlegal.com ---------- */
+const PRACTICE = {
+  s106: {
+    name:'Section 106 agreements', group:'Development & Planning Advice',
+    url:SITE+'/our-practice/section-106-agreements/',
+    related:['Section 106','Planning obligations','Development management'],
+    matter:'Planning obligations', ack:'Section 106 and planning obligations',
+    re:/\bs\.?\s?106\b|section\s?106|planning obligation|unilateral undertaking|deed of variation|affordable housing (contribution|obligation|provision)/i,
+    blurb:'Section 106 agreements secure planning obligations, such as affordable housing, infrastructure contributions or other mitigation, and are usually negotiated with the local planning authority alongside a planning application.',
+    card:'Negotiating, drafting and varying planning obligations.',
+    q:'are you currently negotiating the agreement with the local planning authority, and are there any specific obligations or viability issues you are looking to resolve?',
+    chips:['Negotiating with the council','Viability is the main issue','Affordable housing obligations','Varying an existing agreement']
+  },
+  cil: {
+    name:'CIL', group:'Development & Planning Advice',
+    url:SITE+'/our-practice/cil/',
+    related:['Community Infrastructure Levy','CIL liability','Reliefs and exemptions'],
+    matter:'Community Infrastructure Levy', ack:'the Community Infrastructure Levy (CIL)',
+    re:/\bcil\b|community infrastructure levy|liability notice|demand notice|social housing relief|self[- ]build exemption/i,
+    blurb:'CIL is a charge that many local authorities levy on new development. Questions commonly involve the calculation, reliefs and exemptions, and the procedural steps that must be followed.',
+    card:'Liability, calculation, reliefs and exemptions.',
+    q:'has a CIL liability notice been issued yet, or is your question about the calculation, reliefs or exemptions?',
+    chips:['Liability notice received','Seeking relief or an exemption','Questioning the calculation','Planning ahead for CIL']
+  },
+  appeal: {
+    name:'Planning inquiries, hearings and public examinations', group:'Planning Appeals & Inquiries',
+    url:SITE+'/our-practice/planning-inquiries-hearings-and-public-examinations/',
+    related:['Planning appeals','Reasons for refusal','Appeal strategy'],
+    matter:'Planning refusal / appeal', ack:'a planning refusal and potential appeal',
+    re:/refus|turned down|rejected|appeal|non[- ]determination/i,
+    blurb:'Where an application is refused or not determined in time, options can include an appeal to the Planning Inspectorate or a revised application. Appeals proceed by written representations, a hearing or an inquiry, and there are time limits.',
+    card:'Appeals by written representations, hearing or inquiry.',
+    q:'do you know the main reasons for refusal, and are you weighing up an appeal, a revised application, or both?',
+    chips:['Considering an appeal','Considering a revised application','Appeal already lodged','Not sure yet']
+  },
+  inquiry: {
+    name:'Planning inquiries, hearings and public examinations', group:'Planning Appeals & Inquiries',
+    url:SITE+'/our-practice/planning-inquiries-hearings-and-public-examinations/',
+    related:['Public inquiries','Hearings','Local plan examinations'],
+    matter:'Inquiry / examination', ack:'a planning inquiry, hearing or examination',
+    re:/\binquiry\b|\bhearing\b|public examination|local plan examination|call[- ]?in|called in|inspector/i,
+    blurb:'Inquiries, hearings and examinations involve preparing and presenting a case before an Inspector, often with expert witnesses and a fixed timetable.',
+    card:'Preparing and presenting cases before an Inspector.',
+    q:'is the matter going to a hearing, a public inquiry or a local plan examination, and has a timetable been set?',
+    chips:['Public inquiry','Hearing','Local plan examination','Called-in application']
+  },
+  cpo: {
+    name:'Compulsory purchase and compensation', group:'Compulsory Purchase & Compensation',
+    url:SITE+'/our-practice/compulsory-purchase-and-compensation/',
+    related:['Compulsory purchase','Compensation','Land assembly'],
+    matter:'Compulsory purchase', ack:'compulsory purchase and compensation',
+    re:/compulsory purchase|\bcpo\b|compulsorily|acquiring authority|land assembly|compensation claim|general vesting declaration|\bgvd\b/i,
+    blurb:'Compulsory purchase involves an acquiring authority obtaining land for a public purpose, with statutory procedures, the right to object, and a compensation regime for those affected.',
+    card:'For acquiring authorities, landowners and occupiers.',
+    q:'are you promoting the CPO as an acquiring authority, or are you a landowner or occupier affected by one?',
+    chips:['We are the acquiring authority','Affected landowner','Business occupier','Compensation claim']
+  },
+  highways: {
+    name:'Highways', group:'Highways',
+    url:SITE+'/our-practice/highways/',
+    related:['Highways agreements','Section 278 / Section 38','Stopping up'],
+    matter:'Highways', ack:'highways matters',
+    re:/highway|\bs\.?\s?278\b|section 278|\bs\.?\s?38\b|section 38|stopping[- ]up|public right of way|adoption of (the )?road|access road/i,
+    blurb:'Highways matters often sit alongside development: works agreements with the highway authority, road adoption, stopping up orders and questions over public rights.',
+    card:'Highways agreements, adoption and stopping up.',
+    q:'does it involve a highways agreement such as Section 278 or Section 38, a stopping up order, or a question about public rights over land?',
+    chips:['Section 278 agreement','Section 38 adoption','Stopping up order','Public rights of way']
+  },
+  eia: {
+    name:'Development advice and support', group:'Development & Planning Advice',
+    url:SITE+'/our-practice/development-advice-and-support/',
+    related:['Environmental Impact Assessment','Screening and scoping','Environmental considerations'],
+    matter:'Environmental / EIA', ack:'environmental matters and Environmental Impact Assessment (EIA)',
+    re:/\beia\b|environmental impact|environmental statement|screening opinion|scoping opinion|habitats regulations|biodiversity net gain|\bbng\b|nutrient neutrality|ecology/i,
+    blurb:'Environmental questions can include whether EIA applies, screening and scoping, and related requirements such as habitats assessment or biodiversity net gain.',
+    card:'EIA, screening, scoping and related requirements.',
+    q:'has an EIA screening or scoping opinion been sought, or is the question whether EIA (or another environmental requirement) applies at all?',
+    chips:['Screening opinion stage','Scoping opinion stage','Biodiversity net gain','Not sure if EIA applies']
+  },
+  litigation: {
+    name:'Litigation in the Planning Court and beyond', group:'Planning Litigation',
+    url:SITE+'/our-practice/litigation-in-the-planning-court-and-beyond/',
+    related:['Judicial review','Statutory challenge','Planning Court'],
+    matter:'Planning litigation', ack:'planning litigation, such as a challenge in the Planning Court',
+    re:/judicial review|\bjr\b|planning court|legal challenge|statutory challenge|section 288|pre[- ]action|challenge (the|a) (decision|permission)|quash/i,
+    blurb:'Planning decisions can be challenged in the Planning Court through judicial review or statutory challenge. Time limits are short and strictly applied.',
+    card:'Bringing and defending challenges to planning decisions.',
+    q:'are you considering bringing a challenge, or defending a decision or permission that is being challenged? Timing matters here, as the deadlines are short.',
+    chips:['Considering a challenge','Defending a permission','Pre-action letter received','Decision issued recently']
+  },
+  enforcement: {
+    name:'Regulatory', group:'Planning Enforcement & Regulatory',
+    url:SITE+'/our-practice/regulatory/',
+    related:['Planning enforcement','Enforcement notices','Regulatory compliance'],
+    matter:'Planning enforcement', ack:'planning enforcement and regulatory matters',
+    re:/enforcement|breach of condition|stop notice|planning contravention|unauthori[sz]ed|without (planning )?permission|lawful development certificate|\bldc\b|listed building|prosecution/i,
+    blurb:'Enforcement matters range from an initial council investigation to formal notices, appeals against notices and, in some cases, prosecution. Deadlines on formal notices are important.',
+    card:'Enforcement notices, compliance and regulatory issues.',
+    q:'has the council issued a formal notice, for example an enforcement notice, breach of condition notice or stop notice, or is it still at the investigation stage?',
+    chips:['Enforcement notice issued','Breach of condition notice','Council investigating','Stop notice']
+  },
+  infrastructure: {
+    name:'Infrastructure and energy', group:'Infrastructure & Energy',
+    url:SITE+'/our-practice/infrastructure-and-energy/',
+    related:['Infrastructure','Energy projects','Development consent'],
+    matter:'Infrastructure / energy', ack:'infrastructure and energy consenting',
+    re:/\bdco\b|development consent order|\bnsip\b|nationally significant|solar farm|wind farm|battery storage|\bbess\b|grid connection|energy (project|scheme)|infrastructure project|data cent(re|er)/i,
+    blurb:'Infrastructure and energy projects may be consented through the planning system or, for larger schemes, a Development Consent Order, each with different procedures.',
+    card:'Consenting for infrastructure and energy projects.',
+    q:'is the project likely to go through a standard planning application or the Development Consent Order process?',
+    chips:['Planning application','Development Consent Order','Not sure yet']
+  },
+  transactional: {
+    name:'Transactional', group:'Development & Planning Advice',
+    url:SITE+'/our-practice/transactional/',
+    related:['Land transactions','Planning conditions in contracts','Due diligence'],
+    matter:'Transactional planning', ack:'the planning aspects of a land transaction',
+    re:/option agreement|conditional contract|promotion agreement|due diligence|acquisition of (the )?(site|land)|buying (a|the) site|selling (a|the) site|overage/i,
+    blurb:'Land deals often turn on planning: conditional contracts, options and promotion agreements, and planning due diligence on acquisitions.',
+    card:'Planning input on options, conditional contracts and acquisitions.',
+    q:'is this a land deal such as an option, promotion agreement or conditional contract, and what planning risks need to be reflected in it?',
+    chips:['Option agreement','Conditional contract','Promotion agreement','Planning due diligence']
+  },
+  development: {
+    name:'Development advice and support', group:'Development & Planning Advice',
+    url:SITE+'/our-practice/development-advice-and-support/',
+    related:['Development management','Planning strategy','Planning conditions'],
+    matter:'Development & planning', ack:'development and planning advice',
+    re:/develop|scheme|planning application|planning permission|outline|reserved matters|conditions?\b|homes|housing|residential|mixed[- ]use|regeneration/i,
+    blurb:'Development advice covers the planning strategy for a site, from pre-application discussions and the application itself through to conditions and implementation.',
+    card:'Strategy and support from pre-application to implementation.',
+    q:'what is the main objective at this point: securing a new permission, dealing with conditions or reserved matters, or setting the planning strategy for the site?',
+    chips:['Securing a new permission','Conditions or reserved matters','Planning strategy for a site','Something else']
+  }
+};
+/* Detection priority: more specific topics win over the general one */
+const PRIORITY = ['litigation','enforcement','cpo','appeal','inquiry','s106','cil','highways','eia','infrastructure','transactional','development'];
+
+const STARTERS = [
+  'I need help with a Section 106 agreement',
+  'We are planning a residential development',
+  'I need advice about CIL',
+  'Our planning application was refused',
+  'We are dealing with compulsory purchase',
+  'We have a planning enforcement issue'
+];
+
+const QUESTIONS = {
+  devType:{ q:'What type of development is involved? For example residential, commercial, mixed-use, industrial or energy.',
+            chips:['Residential','Mixed-use','Commercial / office','Industrial / logistics','Energy / infrastructure'] },
+  location:{ q:'Where is the project located? The town or local planning authority is enough.',
+            chips:['London','Greater Manchester','South East','Elsewhere in England','Wales'] },
+  stage:{ q:'What stage is the planning matter at?',
+            chips:['Pre-application','Application submitted','Permission granted','Application refused','Appeal or inquiry underway'] },
+  issue:{ q:'What is the main issue you need assistance with?', chips:[] }
+};
+
+const PLACES = ['Greater Manchester','Tower Hamlets','Milton Keynes','West Midlands','East Midlands','South East','North West','North East','South West','City of London','Kensington','Westminster','Camden','Islington','Hackney','Southwark','Lambeth','Greenwich','Croydon','Barnet','Ealing','Haringey','Newham','Wandsworth','Hammersmith','Lewisham','Brent','London','Manchester','Salford','Trafford','Stockport','Birmingham','Leeds','Liverpool','Bristol','Sheffield','Newcastle','Nottingham','Leicester','Oxford','Cambridge','Kent','Surrey','Essex','Sussex','Hertfordshire','Hampshire','Berkshire','Buckinghamshire','Cheshire','Yorkshire','Lancashire','Devon','Cornwall','Norfolk','Suffolk','Cardiff','Swansea','Newport','Wales','Reading','Brighton','Southampton','Portsmouth','Norwich','York','Bath','Exeter','Plymouth','Coventry','Wolverhampton','Bradford','Derby','Gloucestershire','Wiltshire','Dorset','Somerset','Northamptonshire','Bedfordshire','Midlands','England'];
+
+/* ---- Conversation state ------------------------------------------------- */
+function freshState(){
+  return {
+    topics:[], primary:null, fields:{devType:null,location:null,stage:null,issue:null},
+    role:null, asked:new Set(), lastAsk:null, topicAsked:new Set(),
+    turns:0, assessed:false, submitted:false, userMessages:[]
+  };
+}
+let state = freshState();
+
+/* ---- Extraction helpers ------------------------------------------------- */
+const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function tidy(s,max=70){ s=s.trim().replace(/\s+/g,' ').replace(/[.!]+$/,''); s=s.charAt(0).toUpperCase()+s.slice(1); return s.length>max? s.slice(0,max-1).trim()+'…' : s; }
+
+function detectTopics(msg){
+  return PRIORITY.filter(k => PRACTICE[k].re.test(msg));
+}
+function extractDevType(msg){
+  const homes = msg.match(/(\d[\d,]*)\s*[- ]?(homes?|houses?|units?|dwellings?|flats?|apartments?|beds?)\b/i);
+  const unit = homes ? homes[2].toLowerCase().replace(/s?$/,'s') : '';
+  const map = [
+    [/mixed[- ]use/i,'Mixed-use'],
+    [/student/i,'Student accommodation'],
+    [/logistics|warehouse|industrial|distribution cent/i,'Industrial / logistics'],
+    [/solar|wind farm|battery|energy|grid|\bdco\b|\bnsip\b|infrastructure/i,'Energy / infrastructure'],
+    [/regeneration|estate renewal/i,'Regeneration'],
+    [/build[- ]to[- ]rent|\bbtr\b/i,'Residential (build to rent)'],
+    [/residential|homes|houses|housing|dwellings|flats|apartments/i,'Residential'],
+    [/office|commercial|retail|hotel|leisure|shop/i,'Commercial'],
+    [/extension|householder|my (house|home)|garden/i,'Householder'],
+    [/care home|later living|retirement/i,'Later living / care']
+  ];
+  for (const [re,label] of map){
+    if (re.test(msg)){
+      if (label.startsWith('Residential') && homes) return `Residential (${homes[1]} ${unit})`;
+      if (label==='Mixed-use' && homes) return `Mixed-use (${homes[1]} ${unit})`;
+      return label;
+    }
+  }
+  if (homes) return `Residential (${homes[1]} ${unit})`;
+  return null;
+}
+function extractStage(msg){
+  const map = [
+    [/pre[- ]?app/i,'Pre-application'],
+    [/appeal (has been |was )?(lodged|submitted|underway)|lodged an appeal|at appeal|appeal is (live|ongoing)/i,'Appeal underway'],
+    [/refus|turned down|rejected/i,'Application refused'],
+    [/public inquiry|inquiry (is|has been) (set|scheduled|listed)|hearing (date|is)/i,'Inquiry / hearing scheduled'],
+    [/resolution to grant/i,'Resolution to grant'],
+    [/\b(granted|approved|consented)\b|have (planning )?permission|got (planning )?permission|permission (was|has been) granted/i,'Permission granted'],
+    [/submitted|pending|validated|awaiting (a )?decision|under consideration|with the council for determination/i,'Application submitted'],
+    [/enforcement notice|stop notice|breach of condition notice/i,'Enforcement notice issued'],
+    [/investigat/i,'Council investigating'],
+    [/early stage|feasibility|looking at a site|site search|acquir|promoting/i,'Early stage / feasibility'],
+    [/negotiat/i,'Negotiations underway'],
+    [/liability notice/i,'CIL liability notice issued'],
+    [/pre[- ]action/i,'Pre-action stage']
+  ];
+  for (const [re,label] of map) if (re.test(msg)) return label;
+  return null;
+}
+function extractLocation(msg){
+  const sorted = [...PLACES].sort((a,b)=>b.length-a.length);
+  for (const p of sorted){
+    if (new RegExp('\\b'+esc(p)+'\\b','i').test(msg)) return p;
+  }
+  const m = msg.match(/\b(?:in|at|near|within|located in|based in|borough of|council of)\s+([A-Z][a-z]+(?:[\s-][A-Z][a-z]+){0,2})/);
+  const stop = ['Section','Planning','The','Our','My','We','It','This','That','CIL','England'];
+  if (m && !stop.includes(m[1].split(' ')[0])) return m[1];
+  return null;
+}
+function extractRole(msg){
+  const map = [[/\bdeveloper|housebuilder\b/i,'Developer'],[/landowner|own the (land|site)/i,'Landowner'],[/local authority|\bcouncil\b.*\bwe\b|we are the council|acquiring authority/i,'Public authority'],[/investor|fund\b/i,'Investor'],[/homeowner|my house/i,'Homeowner']];
+  for (const [re,l] of map) if (re.test(msg)) return l;
+  return null;
+}
+function isLegalOpinionRequest(msg){
+  return /\b(will (i|we) (win|succeed|get|be)|what are (my|our|the) chances|chances of|guarantee|definitely|certain(ly)? (win|succeed|be approved)|likely to (win|succeed|be (approved|granted|refused))|should (i|we) (appeal|sign|challenge|accept|pay|object)|am i (legally )?(allowed|entitled)|is (it|this|that) (legal|lawful)|your (legal )?opinion|give me legal advice|predict|what are the odds|can they (legally|lawfully))\b/i.test(msg);
+}
+
+/* ---- Core: simulated AI ------------------------------------------------- */
+/**
+ * generateAIResponse(userMessage)
+ * Returns Promise<{ blocks: Array, chips: string[], source?: {name,url} }>
+ * Block types: {type:'text', text} | {type:'assessment', data} | {type:'lead'}
+ *
+ * To connect a real model later, replace the body with a call to YOUR backend:
+ *   const res = await fetch('/api/town-legal-assistant', {
+ *     method:'POST', headers:{'Content-Type':'application/json'},
+ *     body: JSON.stringify({ message:userMessage, history, enquiry: state.fields })
+ *   });
+ *   return await res.json();   // same shape as below
+ * The backend holds the OpenAI key, restricts retrieval to Town Legal's
+ * approved website content, and applies the same safety rules.
+ */
+async function generateAIResponse(userMessage){
+  const msg = userMessage.trim();
+  state.turns++;
+  state.userMessages.push(msg);
+
+  // 1) Safety: definitive legal opinion / prediction requests
+  if (isLegalOpinionRequest(msg)){
+    const t = detectTopics(msg); absorbTopics(t);
+    const next = state.assessed ? null : nextQuestion();
+    let text = 'That is an important question, but it is not one I can answer. I can provide general information only, and I can’t give a legal opinion or predict an outcome. Whether and how to proceed depends on the specific facts, documents and timescales, and should be reviewed by a qualified Town Legal professional.';
+    if (next){ text += `\n\nIf helpful, I can keep building your enquiry so the team has the full picture. ${next.q}`; state.lastAsk = next.key; }
+    else text += '\n\nYou can submit your enquiry and the team can review the details and advise on the appropriate next step.';
+    return { blocks:[{type:'text',text}], chips: next ? next.chips : ['Submit My Enquiry'], source: sourceFor() };
+  }
+
+  // 2) Extract structured details
+  const before = {...state.fields};
+  const newTopics = absorbTopics(detectTopics(msg));
+  const got = {
+    devType: extractDevType(msg), stage: extractStage(msg), location: extractLocation(msg)
+  };
+  const role = extractRole(msg); if (role && !state.role) state.role = role;
+  for (const k of Object.keys(got)) if (got[k] && !state.fields[k]) state.fields[k] = got[k];
+
+  // Answer to the question we just asked (free text fallback)
+  const la = state.lastAsk;
+  if (la && !before[la] && !state.fields[la] && msg.length < 160){
+    if (la !== 'location' || !newTopics.length) state.fields[la] = tidy(msg);
+  } else if (la === 'issue' && !before.issue){
+    state.fields.issue = tidy(msg);
+  }
+  const captured = Object.keys(state.fields).filter(k => state.fields[k] && !before[k] && k !== la);
+
+  // 3) Greeting / nothing recognised
+  if (!state.primary){
+    const greet = /^(hi|hello|hey|good (morning|afternoon|evening))\b/i.test(msg);
+    state.lastAsk = null;
+    const text = (greet ? 'Hello, and thank you for getting in touch.' : 'Thank you. I want to make sure I understand your matter correctly.') +
+      ' Could you tell me a little more about what you need help with? For example, a Section 106 agreement, a refused application, CIL, compulsory purchase, an enforcement notice, or a new development proposal.';
+    return { blocks:[{type:'text',text}], chips:STARTERS.slice(0,6) };
+  }
+
+  // 4) After assessment: absorb, update, point towards submission
+  if (state.assessed){
+    let text = 'Thank you, I have added that to your enquiry overview.';
+    if (newTopics.length) text += ` It also appears to touch on ${PRACTICE[newTopics[0]].ack}, which I have noted as a related area.`;
+    text += state.submitted
+      ? ' Your enquiry has already been submitted; the Town Legal team will be able to see the details you have shared.'
+      : ' When you are ready, you can submit your enquiry and the Town Legal team can review everything you have shared.';
+    return { blocks:[{type:'text',text}], chips: state.submitted ? ['Start a new enquiry'] : ['Submit My Enquiry','Start a new enquiry'], source: sourceFor() };
+  }
+
+  // 5) Build a contextual reply
+  const parts = [];
+  const P = PRACTICE[state.primary];
+  if (newTopics.includes(state.primary)){
+    parts.push(state.turns === 1 || state.topics.length === 1
+      ? `Thanks. Your enquiry may relate to ${P.ack}.`
+      : `That is helpful. It now sounds as though ${P.ack} may be the central issue.`);
+    const secondary = newTopics.filter(t => t !== state.primary && t !== 'development');
+    if (secondary.length) parts.push(`I have also noted a possible link to ${PRACTICE[secondary[0]].ack}.`);
+  } else if (newTopics.filter(t=>t!=='development').length){
+    parts.push(`Thank you. I have also noted a possible link to ${PRACTICE[newTopics.filter(t=>t!=='development')[0]].ack}.`);
+  }
+  const note = describeCaptured(captured);
+  if (note) parts.push(note);
+  else if (la && state.fields[la] && !newTopics.length) parts.push(ackFor(la));
+
+  const next = nextQuestion();
+  if (next && !readyForAssessment()){
+    state.lastAsk = next.key;
+    const lead = next.topic && state.topicAsked.size === 1 && state.turns <= 2 ? 'To understand the matter further, ' : '';
+    parts.push(lead ? lead + next.rawQ : next.q);
+    return { blocks:[{type:'text',text:parts.join(' ')}], chips:next.chips, source: sourceFor() };
+  }
+
+  // 6) Enough information: assessment
+  state.assessed = true; state.lastAsk = null;
+  parts.push('That gives me a clear enough picture for an initial indication. Here is how your enquiry appears to map to Town Legal’s areas of work.');
+  return {
+    blocks:[{type:'text',text:parts.join(' ')},{type:'assessment',data:buildAssessment()},{type:'lead'}],
+    chips:[], source: sourceFor()
+  };
+}
+
+function absorbTopics(list){
+  const added = [];
+  for (const t of list){
+    if (!state.topics.includes(t)){ state.topics.push(t); added.push(t); }
+  }
+  // choose / upgrade primary
+  const specific = state.topics.filter(t => t !== 'development');
+  const candidate = (specific.length ? specific : state.topics).sort((a,b)=>PRIORITY.indexOf(a)-PRIORITY.indexOf(b))[0] || null;
+  if (!state.primary) state.primary = candidate;
+  else if (state.primary === 'development' && specific.length) state.primary = candidate;
+  if (added.includes('appeal') && !state.fields.stage) state.fields.stage = /appeal/i.test(state.userMessages.at(-1)||'') && !/refus/i.test(state.userMessages.at(-1)||'') ? 'Appeal stage' : 'Application refused';
+  return added;
+}
+
+function nextQuestion(){
+  const P = state.primary && PRACTICE[state.primary];
+  if (P && !state.topicAsked.has(state.primary) && !state.fields.issue){
+    state.topicAsked.add(state.primary);
+    return { key:'issue', q:P.q.charAt(0).toUpperCase()+P.q.slice(1), chips:P.chips, topic:true, rawQ:P.q };
+  }
+  const order = ['devType','location','stage','issue'];
+  for (const k of order){
+    if (!state.fields[k] && !state.asked.has(k)){
+      state.asked.add(k);
+      let q = QUESTIONS[k].q;
+      if (k==='devType' && ['cpo','enforcement','highways'].includes(state.primary)) q = 'What type of site or land use is involved? For example residential, commercial, agricultural or a mixed site.';
+      return { key:k, ...QUESTIONS[k], q };
+    }
+  }
+  return null;
+}
+
+function readyForAssessment(){
+  const f = state.fields;
+  const filled = ['devType','location','stage','issue'].filter(k=>f[k]).length;
+  return state.primary && (filled >= 4 || state.turns >= 7);
+}
+
+function describeCaptured(keys){
+  const f = state.fields; const bits = [];
+  if (keys.includes('devType')) bits.push(scheme(f.devType));
+  if (keys.includes('location')) bits.push(`in ${f.location}`);
+  let s = '';
+  if (bits.length) s = `I have noted ${bits.join(' ')}`;
+  if (keys.includes('stage')) s += s ? ` and recorded the stage as ${f.stage.toLowerCase()}` : `I have recorded the stage as ${f.stage.toLowerCase()}`;
+  return s ? s + '.' : '';
+}
+function scheme(t){
+  let l = t.toLowerCase();
+  l = l.includes('(') ? l.replace(/\s*\(/,' scheme (') : l + ' scheme';
+  return (/^[aeiou]/.test(l) ? 'an ' : 'a ') + l;
+}
+function ackFor(key){
+  const f = state.fields;
+  switch (key){
+    case 'devType': return `Thank you, I have recorded the project type as ${f.devType.toLowerCase()}.`;
+    case 'location': return `Thank you, I have noted the location as ${f.location}.`;
+    case 'stage': return 'Thank you, that helps place the matter in context.';
+    default: return 'Understood, that is useful context.';
+  }
+}
+function sourceFor(){
+  if (!state.primary) return null;
+  const P = PRACTICE[state.primary]; return { name:P.name, url:P.url };
+}
+
+function buildAssessment(){
+  const P = PRACTICE[state.primary];
+  const f = state.fields;
+  const topics = [...new Set(state.topics.flatMap(t => PRACTICE[t].related))].slice(0,6);
+  const others = [...new Set(state.topics.filter(t=>t!==state.primary && PRACTICE[t].name!==P.name).map(t=>PRACTICE[t].name))];
+  const ctx = [];
+  if (f.devType) ctx.push(scheme(f.devType));
+  if (f.location) ctx.push(`in ${f.location}`);
+  let explain = `Based on what you have shared${ctx.length ? ' about ' + ctx.join(' ') : ''}${f.stage ? ` (stage: ${f.stage.toLowerCase()})` : ''}, your enquiry appears to relate to Town Legal’s ${P.name} work. ${P.blurb}`;
+  if (others.length) explain += ` ${others.join(' and ')} may also be relevant.`;
+  return { group:P.group, practice:P.name, url:P.url, topics, explain };
+}
+
+/* =========================================================================
+   UI
+   ========================================================================= */
+const $ = s => document.querySelector(s);
+const app = $('#app'), thread = $('#thread'), inner = $('#threadInner');
+const input = $('#input'), sendBtn = $('#sendBtn');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let busy = false;
+
+/* Practice area cards on landing */
+(function renderAreas(){
+  const cards = [
+    ['Section 106 agreements','s106','I need help with a Section 106 agreement'],
+    ['CIL','cil','I need advice about CIL'],
+    ['Development advice and support','development','We are planning a residential development'],
+    ['Planning inquiries, hearings and public examinations','appeal','Our planning application was refused'],
+    ['Compulsory purchase and compensation','cpo','We are dealing with compulsory purchase'],
+    ['Regulatory','enforcement','We have a planning enforcement issue'],
+    ['Litigation in the Planning Court','litigation','We may want to challenge a planning decision in the Planning Court'],
+    ['Highways','highways','We need help with a Section 278 highways agreement'],
+    ['Infrastructure and energy','infrastructure','We are promoting a solar farm and battery storage project'],
+    ['Transactional','transactional','We are negotiating an option agreement on a development site']
+  ];
+  $('#areaGrid').innerHTML = cards.map(([t,k,p]) =>
+    `<button class="area" data-prompt="${p}"><h3>${t}</h3><p>${PRACTICE[k].card}</p><span class="go">Ask about this</span></button>`).join('');
+})();
+
+document.addEventListener('click', e => {
+  const open = e.target.closest('[data-open-chat]');
+  if (open){ openChat(); return; }
+  const area = e.target.closest('.area');
+  if (area){ openChat(area.dataset.prompt); return; }
+  const chip = e.target.closest('.chip');
+  if (chip && !busy){ handleChip(chip.dataset.value); return; }
+  if (e.target.closest('[data-submit-enquiry]')){ openLead(); return; }
+  if (e.target.closest('[data-close-modal]')){ $('#leadModal').close(); return; }
+});
+
+function openChat(prefill){
+  app.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (!inner.children.length) startConversation();
+  if (prefill) setTimeout(()=>send(prefill), inner.children.length > 2 ? 0 : 900);
+  setTimeout(()=>input.focus({preventScroll:true}), 400);
+}
+function closeChat(){ app.classList.remove('open'); document.body.style.overflow=''; toggleSheet(false); }
+$('#closeBtn').onclick = closeChat;
+document.addEventListener('keydown', e => { if (e.key==='Escape' && app.classList.contains('open') && !$('#leadModal').open) closeChat(); });
+
+function startConversation(){
+  state = freshState();
+  inner.innerHTML = '';
+  resetOverview();
+  addAI("Hello, I’m Town Legal’s AI Planning Assistant. Tell me about your planning matter and I’ll ask a few questions to understand what you need.", null, true)
+    .then(()=>addChips(STARTERS));
+}
+$('#resetBtn').onclick = () => { if (!busy) startConversation(); };
+
+/* Messages */
+function scrollDown(){ thread.scrollTop = thread.scrollHeight; }
+function addUser(text){
+  const el = document.createElement('div');
+  el.className = 'msg user';
+  el.innerHTML = `<div class="bubble"></div>`;
+  el.querySelector('.bubble').textContent = text;
+  inner.appendChild(el); scrollDown();
+}
+function showTyping(){
+  const el = document.createElement('div');
+  el.className = 'msg ai typing'; el.setAttribute('aria-label','Assistant is typing');
+  el.innerHTML = `<div class="avatar" aria-hidden="true">TL</div><div class="bubble"><i></i><i></i><i></i></div>`;
+  inner.appendChild(el); scrollDown(); return el;
+}
+function addAI(text, source, instant){
+  return new Promise(resolve => {
+    const el = document.createElement('div');
+    el.className = 'msg ai';
+    el.innerHTML = `<div class="avatar" aria-hidden="true">TL</div><div class="msg-col"><div class="bubble"></div></div>`;
+    const bubble = el.querySelector('.bubble'), col = el.querySelector('.msg-col');
+    inner.appendChild(el);
+    const finish = () => {
+      if (source){
+        const meta = document.createElement('div'); meta.className='msg-meta';
+        meta.innerHTML = `<span class="src"><span class="dot"></span>Source:</span> <a href="${source.url}" target="_blank" rel="noopener">townlegal.com: ${source.name}</a>`;
+        col.appendChild(meta);
+      }
+      scrollDown(); resolve();
+    };
+    if (instant || reduceMotion){ bubble.textContent = text; finish(); return; }
+    const words = text.split(/(\s+)/); let i = 0;
+    const tick = () => {
+      bubble.textContent += words.slice(i, i+3).join(''); i += 3;
+      scrollDown();
+      if (i < words.length) setTimeout(tick, 22); else finish();
+    };
+    tick();
+  });
+}
+function addChips(list){
+  if (!list || !list.length) return;
+  const wrap = document.createElement('div'); wrap.className = 'chips';
+  wrap.innerHTML = list.map(c => `<button class="chip${c==='Submit My Enquiry'?' primary':''}" data-value="${c.replace(/"/g,'&quot;')}">${c}</button>`).join('');
+  inner.appendChild(wrap); scrollDown();
+}
+function clearChips(){ inner.querySelectorAll('.chips').forEach(c => c.remove()); }
+
+function addAssessment(d){
+  const el = document.createElement('div'); el.className = 'card';
+  el.innerHTML = `
+    <div class="card-head"><p class="card-kicker">Your enquiry may relate to:</p><h3>${d.group}</h3></div>
+    <div class="card-body">
+      <ul>${d.topics.map(t=>`<li>${t}</li>`).join('')}</ul>
+      <p>${d.explain}</p>
+      <p class="fine">This is an initial indication based on general information and may not reflect every relevant issue. It is not legal advice.</p>
+    </div>
+    <div class="card-foot">
+      <a class="btn btn-outline btn-sm" href="${d.url}" target="_blank" rel="noopener">Read about ${d.practice}</a>
+    </div>`;
+  inner.appendChild(el); scrollDown();
+}
+function addLeadCard(){
+  const el = document.createElement('div'); el.className = 'card lead-card';
+  el.innerHTML = `
+    <div class="card-head"><h3>Would you like the Town Legal team to review your enquiry?</h3></div>
+    <div class="card-body"><p style="margin:0">Your answers so far will be included, so you won’t need to repeat yourself.</p></div>
+    <div class="card-foot">
+      <button class="btn btn-solid btn-sm" data-submit-enquiry>Submit My Enquiry</button>
+      <a class="btn btn-outline btn-sm" href="https://www.townlegal.com/contact/" target="_blank" rel="noopener">Speak to Town Legal</a>
+    </div>`;
+  inner.appendChild(el); scrollDown();
+}
+
+/* Sending */
+function handleChip(v){
+  if (v === 'Submit My Enquiry'){ openLead(); return; }
+  if (v === 'Start a new enquiry'){ startConversation(); return; }
+  send(v);
+}
+async function send(text){
+  text = (text || '').trim();
+  if (!text || busy) return;
+  busy = true; sendBtn.disabled = true;
+  clearChips(); addUser(text);
+  input.value = ''; autosize();
+  const typing = showTyping();
+  const [res] = await Promise.all([
+    generateAIResponse(text),
+    new Promise(r => setTimeout(r, reduceMotion ? 150 : 650 + Math.min(text.length*6, 900)))
+  ]);
+  typing.remove();
+  for (const b of res.blocks){
+    if (b.type === 'text') await addAI(b.text, res.source);
+    else if (b.type === 'assessment'){ await wait(350); addAssessment(b.data); }
+    else if (b.type === 'lead'){ await wait(400); addLeadCard(); }
+  }
+  addChips(res.chips);
+  updateOverview();
+  busy = false; sendBtn.disabled = !input.value.trim();
+}
+const wait = ms => new Promise(r => setTimeout(r, reduceMotion ? 0 : ms));
+
+sendBtn.onclick = () => send(input.value);
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); send(input.value); }
+});
+input.addEventListener('input', () => { autosize(); sendBtn.disabled = busy || !input.value.trim(); });
+function autosize(){ input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 140) + 'px'; }
+
+/* Overview panel */
+const OV = ['matter','practice','topics','devType','location','stage','issue'];
+const lastOv = {};
+function setOv(key, html, isEmpty){
+  const dd = $('#ov-'+key);
+  if (lastOv[key] === html) return;
+  lastOv[key] = html;
+  dd.innerHTML = html; dd.classList.toggle('empty', !!isEmpty);
+  if (!isEmpty){ dd.classList.remove('flash'); void dd.offsetWidth; dd.classList.add('flash'); }
+}
+function resetOverview(){
+  OV.forEach(k => { lastOv[k] = null; setOv(k,'Awaiting details',true); });
+  setStatus('new','Not started'); $('#progressBar').style.width = '0%';
+}
+function updateOverview(){
+  const P = state.primary && PRACTICE[state.primary];
+  const f = state.fields;
+  setOv('matter', P ? P.matter : 'Awaiting details', !P);
+  setOv('practice', P ? `<a href="${P.url}" target="_blank" rel="noopener">${P.name}</a>` : 'Awaiting details', !P);
+  const topics = [...new Set(state.topics.flatMap(t => PRACTICE[t].related))].slice(0,6);
+  setOv('topics', topics.length ? `<span class="tags">${topics.map(t=>`<span>${t}</span>`).join('')}</span>` : 'Awaiting details', !topics.length);
+  ['devType','location','stage','issue'].forEach(k => setOv(k, f[k] ? escapeHTML(f[k]) : 'Awaiting details', !f[k]));
+  const filled = (P?1:0) + ['devType','location','stage','issue'].filter(k=>f[k]).length;
+  $('#progressBar').style.width = (state.submitted ? 100 : Math.round(filled/5*90)) + '%';
+  if (state.submitted) setStatus('submitted','Enquiry submitted');
+  else if (state.assessed) setStatus('ready','Assessment ready, awaiting submission');
+  else if (state.turns) setStatus('gathering','Gathering information');
+}
+function setStatus(s, label){ const el = $('#ov-status'); el.dataset.s = s; el.textContent = label; }
+function escapeHTML(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* Mobile sheet */
+const ov = $('#overview'), scrim = $('#scrim'), ovToggle = $('#ovToggle');
+function toggleSheet(show){ ov.classList.toggle('show', show); scrim.classList.toggle('show', show); ovToggle.setAttribute('aria-expanded', show); }
+ovToggle.onclick = () => toggleSheet(!ov.classList.contains('show'));
+scrim.onclick = () => toggleSheet(false);
+$('#sheetClose').onclick = () => toggleSheet(false);
+
+/* Lead capture */
+const modal = $('#leadModal'), form = $('#leadForm');
+function openLead(){
+  if (state.submitted){ $('#leadFormView').hidden = true; $('#leadSuccessView').hidden = false; modal.showModal(); return; }
+  $('#leadFormView').hidden = false; $('#leadSuccessView').hidden = true;
+  const f = state.fields, P = state.primary && PRACTICE[state.primary];
+  if (f.location && !form.location.value) form.location.value = f.location;
+  if (f.devType){
+    const opt = [...form.type.options].find(o => o.value && f.devType.toLowerCase().startsWith(o.value.toLowerCase().split(' ')[0]));
+    form.type.value = opt ? opt.value : 'Other';
+  }
+  if (!form.desc.value){
+    const lines = [];
+    if (P) lines.push(`Matter: ${P.matter} (${P.name})`);
+    if (f.devType) lines.push(`Project type: ${f.devType}`);
+    if (f.location) lines.push(`Location: ${f.location}`);
+    if (f.stage) lines.push(`Planning stage: ${f.stage}`);
+    if (f.issue) lines.push(`Key issue: ${f.issue}`);
+    if (state.userMessages[0]) lines.push(`\nIn my words: ${state.userMessages[0]}`);
+    form.desc.value = lines.join('\n');
+  }
+  modal.showModal();
+  setTimeout(()=>form.fullname.focus(), 50);
+}
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  let ok = true;
+  const setErr = (el, msg) => { const fld = el.closest('.field'); fld.classList.toggle('invalid', !!msg); fld.querySelector('.err').textContent = msg || ''; if (msg) ok = false; };
+  setErr(form.fullname, form.fullname.value.trim() ? '' : 'Enter your full name.');
+  setErr(form.email, /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.value.trim()) ? '' : 'Enter a valid email address, like name@company.co.uk.');
+  setErr(form.tel, !form.tel.value.trim() || /^[+\d][\d\s()-]{7,}$/.test(form.tel.value.trim()) ? '' : 'Enter a valid telephone number.');
+  setErr(form.desc, form.desc.value.trim().length >= 10 ? '' : 'Add a brief description of your matter.');
+  if (form.contact.value === 'Telephone' && !form.tel.value.trim()) setErr(form.tel, 'Add a telephone number, or choose email as your contact method.');
+  if (!ok){ form.querySelector('.invalid input, .invalid textarea')?.focus(); return; }
+
+  // POC: payload would be POSTed to a secure endpoint / CRM here
+  const payload = Object.fromEntries(new FormData(form));
+  payload.enquiry = { ...state.fields, practiceArea: state.primary && PRACTICE[state.primary].name, topics: state.topics };
+  console.info('[POC] Enquiry payload', payload);
+
+  state.submitted = true;
+  $('#leadFormView').hidden = true; $('#leadSuccessView').hidden = false;
+  updateOverview();
+  clearChips();
+  inner.querySelectorAll('[data-submit-enquiry]').forEach(b => { b.disabled = true; b.textContent = 'Enquiry submitted'; });
+  addAI('Thank you. Your enquiry has been captured. The Town Legal team can review the information provided and determine the appropriate next step.', null).then(()=>addChips(['Start a new enquiry']));
+});
+</script>
+</body>
+</html>
